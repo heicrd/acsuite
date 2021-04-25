@@ -20,27 +20,6 @@ simplefilter("always")  # display warnings
 
 Trim = Tuple[Optional[int], Optional[int]]
 
-# fmt: off
-VALID_FFMPEG_EXTENSIONS = [
-    '.aac', '.m4a', '.adts',
-    '.ac3',
-    '.alac', '.caf',
-    '.dca', '.dts',
-    '.eac3',
-    '.flac',
-    '.gsm',
-    '.mlp',
-    '.mp2', '.mp3', '.mpga',
-    '.opus', '.spx', '.ogg', '.oga',
-    '.pcm', '.raw',
-    '.sbc',
-    '.thd',
-    '.tta',
-    '.wav', '.w64',
-    '.wma',
-]
-# fmt: on
-
 
 def eztrim(
     clip: vs.VideoNode,
@@ -109,24 +88,11 @@ def eztrim(
         raise FileNotFoundError(f"eztrim: {audio_file} not found")
     audio_file_name, audio_file_ext = os.path.splitext(audio_file)
 
-    codec_args = []
-    if audio_file_ext in VALID_FFMPEG_EXTENSIONS:
-        codec_args += ["-c:a", "copy", "-rf64", "auto"]
-    else:
-        warn(
-            f"eztrim: {audio_file_ext} is not a supported extension by FFmpeg's audio encoders, re-encoding to WAV",
-            Warning,
-        )
-        audio_file_ext = ".wav"  # defaults to pcm_s16le so a 24-bit input with wrong ext will be downscaled
+    codec_args = ["-c:a", "copy", "-rf64", "auto"]
 
     # --- re-naming outfile if not formatted correctly -----------------------------------------------------------------
     if outfile is None:
         outfile = audio_file_name + "_cut" + audio_file_ext
-    elif not os.path.splitext(outfile)[1]:
-        outfile += audio_file_ext
-    elif os.path.splitext(outfile)[1] != audio_file_ext:
-        warn(f"eztrim: the outfile does not have the correct extension, changing to {audio_file_ext}", Warning)
-        outfile = os.path.splitext(outfile)[0] + audio_file_ext
 
     if os.path.isfile(outfile):
         raise FileExistsError(f"eztrim: {outfile} already exists")
@@ -419,8 +385,6 @@ def concat(
     audio_file_extensions = set([os.path.splitext(af)[1] for af in audio_files] + [os.path.splitext(outfile)[1]])
     if len(audio_file_extensions) > 1:
         raise ValueError("concat: all files must have the same extension")
-    if (ext := audio_file_extensions.pop()) not in VALID_FFMPEG_EXTENSIONS:
-        raise ValueError(f"concat: '{ext}' is not a valid extension recognized by any known FFmpeg encoders")
     for af in audio_files:
         if not os.path.isfile(af):
             raise FileNotFoundError(f"concat: {af} not found")

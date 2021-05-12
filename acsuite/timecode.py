@@ -42,7 +42,7 @@ def frames_to_timecodes(ranges: Union[Trim, List[Trim]],
     :return:          List of timestamp ranges.
     """
     ranges = [ranges] if isinstance(ranges, tuple) else ranges
-    num_frames = len(timecodes)
+    num_frames = len(timecodes) - 1
 
     out = []
     for r in ranges:
@@ -76,7 +76,7 @@ def clip_to_timecodes(src_clip: vs.VideoNode) -> List[float]:
         rich = True
     except ImportError:
 
-        def track(x, description, total):
+        def track(x, description, total):  # type: ignore
             return x
 
         rich = False

@@ -81,6 +81,7 @@ class FFmpeg():
 
         :return:     stdout of ffmpeg
         """
+        logger.debug("ffmpeg command args: {}".format(" ".join(list(args))))
         return run([self.ffmpeg_path] + self.ffargs + list(args), capture_output=True, check=True, text=True) \
             .stdout.splitlines()
 
@@ -200,7 +201,8 @@ class FFmpegAudio(FFmpeg):
             if len(streams) > 1:
                 if len(output) > 1 and len(streams) != len(output):
                     raise ValueError("Improper number of output filenames supplied!")
-                if not any([name == "index" for _, name, _, _ in string.Formatter().parse(output[0])]):
+                if len(streams) != len(output) and \
+                        not any([name == "index" for _, name, _, _ in string.Formatter().parse(output[0])]):
                     raise ValueError("Output filename does not have an index format specifier!")
                 if len(output) == 1:
                     output = [output[0]] * len(streams)
@@ -270,7 +272,7 @@ class FFmpegAudio(FFmpeg):
         os.remove(cf)
         return out
 
-    def split(self, filename: str, outfile: Union[str, List[str]]) -> List[str]:
+    def split(self, filename: str, outfile: Union[str, List[str]]) -> None:
         """
         Split audio streams from a multimedia container into multiple files.
 
@@ -285,6 +287,21 @@ class FFmpegAudio(FFmpeg):
                     "-c", "copy",
                     "-vn", "-sn",
                     *self.map_streams(streams, outfile, filename, combine=False),
+                    "-y"
+                    )
+
+    def join(self, outfile: str, *filenames: str) -> None:
+        """
+        Join split audio files into a single multimedia container.
+
+        :param outfile:   Output file.
+        :param filenames: Files to join into container.
+        """
+        self.ffmpeg(*[x for y in list(zip(["-i"]*len(filenames), filenames)) for x in y],
+                    *[x for y in list(zip(["-map"]*len(filenames), [f"{i:d}:a" for i in range(len(filenames))]))
+                      for x in y],
+                    "-c", "copy",
+                    outfile,
                     "-y"
                     )
 

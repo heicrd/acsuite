@@ -103,15 +103,10 @@ class FFmpeg():
 
         :param search_path: Path to search for binaries.
         """
-        if search_path is None:
-            ffmpeg = which("ffmpeg")
-            ffprobe = which("ffprobe")
-        else:
-            search_path = os.path.dirname(search_path) if os.path.isfile(search_path) else search_path
-            ffprobe = os.path.join(os.path.dirname(search_path), "ffprobe")
-            ffmpeg = os.path.join(os.path.dirname(search_path), "ffmpeg")
+        ffmpeg = which("ffmpeg", path=search_path) or which("ffmpeg")
+        ffprobe = which("ffprobe", path=search_path) or which("ffprobe")
 
-        if ffmpeg is None or ffprobe is None or not os.path.isfile(ffmpeg) or not os.path.isfile(ffprobe):
+        if ffmpeg is None or ffprobe is None:
             raise FileNotFoundError(f"eztrim: ffmpeg/ffprobe executables not found in {search_path or 'PATH'}")
 
         self.ffmpeg_path = ffmpeg

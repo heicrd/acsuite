@@ -4,7 +4,7 @@ import string
 import tempfile
 
 from enum import Enum
-from shutil import which
+from shutil import which, move
 from subprocess import CalledProcessError, run
 from typing import Any, Dict, List, Literal, Optional, NamedTuple, Tuple, Union
 
@@ -347,7 +347,7 @@ class FFmpegAudio(FFmpeg):
                     raise ValueError("Received too many output filenames!")
                 if any([name == "index" for _, name, _, _ in string.Formatter().parse(outfile[0])]):
                     raise ValueError("Found an index format specifier in output filename, but 'combine' is True!")
-                os.rename(clipped, outfile[0].format(filename=filename))
+                move(clipped, outfile[0].format(filename=filename))
         finally:
             for p in partials:
                 os.remove(p) if os.path.isfile(p) else None
